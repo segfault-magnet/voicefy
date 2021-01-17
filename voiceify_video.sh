@@ -1,12 +1,12 @@
 #!/bin/bash -e
 
-if [[ $# != 2 ]]; then
-	echo "Invalid usage! $0 VIDEO_IN VIDEO_OUT" 1>&2
+if [[ $# != 1 ]]; then
+	echo "Invalid usage! $0 VIDEO_IN" 1>&2
 	exit 1
 fi
 
 video_in="$1"
-video_out="$2"
+video_out="safe_$1"
 
 link_or_copy(){
 	cp --link "$@" || cp "$@"
@@ -29,3 +29,5 @@ docker run \
 	--volume "$docker_storage:/data"  \
 	voicefy \
 	"/opt/processors/voicefy_video.sh" "/data/input/$video_in_name" "/data/output/$video_out_name" \
+
+mv "$docker_storage/output/$video_out_name" "$video_out"

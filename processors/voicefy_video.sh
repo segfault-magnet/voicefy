@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -e
 
 if [[ $# != 2 ]]; then
 	echo "Invalid usage! $0 VIDEO_IN VIDEO_OUT" 1>&2
@@ -17,15 +17,8 @@ trap cleanup EXIT
 
 audio_t="$(/opt/utility/detect_audio.sh "$video_in")"
 
-unprocessed_audio="$processing_dir/unprocessed.$audio_t"
-
-ffmpeg -i "file:$video_in" \
-	 -map 0:a \
-	 -c copy \
-	 "file:$unprocessed_audio"
-
 processed_audio="$processing_dir/processed.$audio_t"
-/opt/processors/voicefy_audio.sh "$unprocessed_audio" "$processed_audio"
+/opt/processors/voicefy_audio.sh "$video_in" "$processed_audio"
 
 ffmpeg -i "$video_in" \
 	-i "$processed_audio" \

@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -e
 
 if [[ $# != 2 ]]; then
 	echo "Invalid usage! $0 AUDIO_IN AUDIO_OUT" 1>&2
@@ -15,8 +15,6 @@ cleanup(){
 }
 trap cleanup EXIT
 
-audio_t="$(/opt/utility/detect_audio.sh "$audio_in")"
-
 preprocess_audio="$processing_dir/original_audio" 
 postprocess_audio="$processing_dir/spleeter_audio"
 scrap_space="$processing_dir/scrap"
@@ -29,12 +27,11 @@ rescrap(){
 
 ffmpeg -i "file:$audio_in" \
 	 -map 0:a \
-	 -c copy \
 	 -segment_time 00:03:00 \
-	 -segment_format "$audio_t" \
+	 -segment_format wav \
 	 -f segment \
 	 -reset_timestamps 1 \
-	 "file:$preprocess_audio/%08d.$audio_t" < /dev/null
+	 "file:$preprocess_audio/%08d.wav" < /dev/null
 
 
 find "$preprocess_audio" -type f | 
@@ -42,7 +39,7 @@ find "$preprocess_audio" -type f |
 
 		MODEL_PATH="/opt/models" spleeter separate \
 			-p spleeter:2stems \
-			-o "$scrap_space" "$audio_part"
+			-o "$scrap_space" "$audio_part" < /dev/null
 
 		part_name="$(basename "$audio_part")"
 		processed_file="$(find "$scrap_space" -type f -iname "*vocals*" | head -1 )"
@@ -51,4 +48,7 @@ find "$preprocess_audio" -type f |
 		rescrap
 	done
 
-ffmpeg -f concat -safe 0 -i <( find "$postprocess_audio" -type f ) -c copy "$audio_out"
+ffmpeg -f concat \
+	-safe 0 \
+	-i <( find "$postprocess_audio" -type f | sort | while read -r line; do echo "file '$line'"; done ) \
+	"$audio_out" < /dev/null
