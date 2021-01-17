@@ -1,17 +1,33 @@
-#!/bin/bash
+#!/bin/bash -x
 
 if [[ $# != 2 ]]; then
 	echo "Invalid usage! $0 VIDEO_IN VIDEO_OUT" 1>&2
 	exit 1
 fi
 
-detect_audio_type(){
-	ffprobe -v quiet \
-		-print_format json \
-		-show_format \
-		-show_streams \
-		"$1"  | 
-		jq --raw-output '.streams[] | select(.codec_type == "audio") | .codec_name ' |
-		head -1;
-}
 
+video_in="$1"
+video_out="$2"
+
+processing_dir="$(mktemp --directory)"
+cleanup(){
+	rm -rf "$processing_dir" || true
+}
+trap cleanup EXIT
+
+audio_t="$(/opt/utility/detect_audio.sh "$video_in")"
+
+unprocessed_audio="$processing_dir/unprocessed.$audio_t"
+
+ffmpeg -i "file:$video_in" \
+	 -map 0:a \
+	 -c copy \
+	 "file:$unprocessed_audio"
+
+processed_audio="$processing_dir/processed.$audio_t"
+/opt/processors/voicefy_audio.sh "$unprocessed_audio" "$processed_audio"
+
+ffmpeg -i "$video_in" \
+	-i "$processed_audio" \
+	-c:v copy -map 0:v:0 -map 1:a:0 \
+	"$video_out"

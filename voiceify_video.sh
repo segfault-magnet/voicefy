@@ -12,7 +12,7 @@ link_or_copy(){
 	cp --link "$@" || cp "$@"
 }
 
-docker_storage="$( readlink --canonicalize-existing "$(mktemp --directory)" )"
+docker_storage="$(mktemp --directory)"
 cleanup(){
 	rm -rf "$docker_storage" || true
 }
@@ -25,6 +25,7 @@ link_or_copy "$video_in" "$docker_storage/input"
 video_in_name="$(basename "$video_in")"
 video_out_name="$(basename "$video_out")"
 
-docker run voicefy \
-	"./voicefy_video.sh" "/data/input/$video_in_name" "/data/output/$video_out_name" \
-	--mount "$docker_storage:/data" 
+docker run \
+	--volume "$docker_storage:/data"  \
+	voicefy \
+	"/opt/processors/voicefy_video.sh" "/data/input/$video_in_name" "/data/output/$video_out_name" \
