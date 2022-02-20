@@ -6,7 +6,7 @@ if [[ $# != 1 ]]; then
 fi
 
 video_in="$1"
-video_out="safe_$1"
+video_out="safe_$(basename "$1")"
 
 link_or_copy(){
 	cp --link "$@" || cp "$@"

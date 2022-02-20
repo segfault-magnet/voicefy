@@ -2,11 +2,19 @@ FROM ubuntu
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Sarajevo
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && apt-get -y install python3.9 python3-pip jq sox curl && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get -y install python3 python3-pip ffmpeg jq sox curl
+RUN curl -O \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh
+
+RUN conda install -c conda-forge ffmpeg
 
 RUN pip3 install spleeter
 

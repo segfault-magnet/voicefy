@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 if [[ $# != 2 ]]; then
 	echo "Invalid usage! $0 VIDEO_IN VIDEO_OUT" 1>&2
@@ -22,5 +22,6 @@ processed_audio="$processing_dir/processed.$audio_t"
 
 ffmpeg -i "$video_in" \
 	-i "$processed_audio" \
-	-c:v copy -map 0:v:0 -map 1:a:0 \
+	-map 0:v:0 -map 1:a:0 -map 0:s? \
+	-c:v copy -c:s copy \
 	"$video_out"

@@ -26,7 +26,7 @@ rescrap(){
 }
 
 ffmpeg -i "file:$audio_in" \
-	 -map 0:a \
+	 -map 0:a:0 \
 	 -segment_time 00:03:00 \
 	 -segment_format wav \
 	 -f segment \
